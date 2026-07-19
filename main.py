@@ -23,8 +23,8 @@ def get_data():
 
 def main_data(file):
     df = pd.DataFrame(file['hourly'])
-    df['city'] = "Jakarta"
-    df.rename = df(columns={'temperature_2m' : 'temperature'})
+    df['city'] = "Yogyakarta"
+    df = df.rename(columns={'temperature_2m' : 'temperature'})
     df_filtered = df[['time', 'city', 'temperature', 'rain', 'weather_code', 'precipitation_probability']]
     return df_filtered
 
@@ -33,3 +33,9 @@ def connect_db(file):
     file.to_sql(name='weather_report', con=engine, if_exists='append', index=False)
     engine.dispose()
     return file
+
+try:
+    main_file = get_data()
+    cleaned_file = main_data(main_file)
+    connect_db(cleaned_file)
+    print("Import Sucess")
