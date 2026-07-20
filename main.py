@@ -17,10 +17,10 @@ load_dotenv()
 
 #Mysql config
 db_config = {
-    'host' : os.getenv('host'),
-    'user' : os.getenv('user'),
-    'password' : os.getenv('password'),
-    'database' : os.getenv('database')
+    'host' : os.getenv('DB_HOST'),
+    'user' : os.getenv('DB_USER'),
+    'password' : os.getenv('DB_PASSWORD'),
+    'database' : os.getenv('DB_DATABASE')
 }
 
 #Main URL
@@ -28,28 +28,34 @@ url = "https://api.open-meteo.com/v1/forecast?latitude=-7.8014&longitude=110.364
 
 logging.info("Script Started")
 
-def url_response(url):
-    try:
-        get_url_response = requests.get(url)
-        if get_url_response.status_code == 200:
-            logging.info(f"Response Success : {get_url_response.status_code}")
-        else:
-            logging.info(f"Response Failed : {get_url_response.status_code}")
-            return None
-    except Exception as e:
-        logging.error(f"An Error Occured : {e}")
+# def url_response(url):
+#     try:
+#         get_url_response = requests.get(url)
+#         if get_url_response.status_code == 200:
+#             logging.info(f"Response Success : {get_url_response.status_code}")
+#         else:
+#             logging.info(f"Response Failed : {get_url_response.status_code}")
+#             return None
+#     except Exception as e:
+#         logging.error(f"An Error Occured : {e}")
 
 def get_data(url):
     try:
-        url_api = requests.get(url)
-        data_json = url_api.json()
-        return data_json
+        get_url = requests.get(url)
+        if get_url.status_code == 200:
+            logging.info(f"Response Success : {get_url.status_code}")
+            data_json = get_url.json()
+            return data_json
+        else:
+            logging.warning(f"Response Failed : {get_url.status_code}")
+            return None
     except Exception as e:
         logging.error(f"An Error Occured : {e}")
         return None
     
 def main_data(file):
     df = pd.DataFrame(file['hourly'])
+    df['time'] = pd.to_datetime(df['time'])
     df['city'] = "Yogyakarta"
     df = df.rename(columns={'temperature_2m' : 'temperature'})
     df_filtered = df[['time', 'city', 'temperature', 'rain', 'weather_code', 'precipitation_probability']]
@@ -62,10 +68,10 @@ def connect_db(file):
     return file
 
 try:
-    check_response = url_response(url)
+#    check_response = url_response(url)
     main_file = get_data(url)
     cleaned_file = main_data(main_file)
     connect_db(cleaned_file)
-    logging.info("Import Sucess")
+    logging.info(f"Import Success!. {len(cleaned_file)} Row Inserted. Check MySQL for Validation.")
 except Exception as e:
     logging.error(f"Something Went Wrong : {e}")
